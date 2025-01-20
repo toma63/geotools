@@ -61,8 +61,8 @@
        if (evenp i) 
          collect degrees into longitudes
        else
-         collect degrees into latitudes      
-      finally (return (list (apply #'+ (mapcar #'* longitudes LONG-FACTORS)) 
-			    (apply #'+ (mapcar #'* latitudes LAT-FACTORS)))))))
+         collect degrees into latitudes
+       finally (return (list (- (apply #'+ (mapcar #'* longitudes LONG-FACTORS)) 180.0)
+			     (- (apply #'+ (mapcar #'* latitudes LAT-FACTORS)) 90.0))))))
 
 
