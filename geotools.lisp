@@ -41,3 +41,28 @@
   "Compute the great circle distance in km between two latitude/longitude points in signed decimal degrees"
   (* EARTH-RADIUS (haversine-c (haversine-a lat1 long1 lat2 long2))))
 
+(defun mh-char2num (char)
+  "takes a single character from a maidenhead grid and converts it to a 0 based integer"
+  (let ((raw-code (char-code char)))
+    (cond ((and (>= raw-code 65) (< raw-code 89)) (- raw-code 65))
+	  ((and (>= raw-code 48) (< raw-code 58 )) (- raw-code 48))
+	  (t (error "out of range character")))))
+
+(defvar LONG-FACTORS '(20 2 1/12 1/120))
+(defvar LAT-FACTORS '(10 1 1/24 1/240))
+
+(defun mh2ll (mh-grid)
+  "Handle 2/4/6/8 charcters, default to center for missing lower grids.
+    Each pair of characters represents a longitude and latitude."
+  (let* ((uc-grid (string-upcase mh-grid))
+	 (int-mapped (map 'list #'mh-char2num uc-grid)))
+    (loop for degrees in int-mapped
+       for i from 0
+       if (evenp i) 
+         collect degrees into longitudes
+       else
+         collect degrees into latitudes
+       finally (return (list (- (apply #'+ (mapcar #'* longitudes LONG-FACTORS)) 180.0)
+			     (- (apply #'+ (mapcar #'* latitudes LAT-FACTORS)) 90.0))))))
+
+
