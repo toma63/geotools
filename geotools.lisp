@@ -50,19 +50,27 @@
 
 (defvar LONG-FACTORS '(20 2 1/12 1/120))
 (defvar LAT-FACTORS '(10 1 1/24 1/240))
+;; alternating longitude and latitude factors
+(defvar LONG-LAT-OFFSETS '(10 5 1 1/2 1/24 1/48 1/240 1/480))
 
 (defun mh2ll (mh-grid)
   "Handle 2/4/6/8 charcters, default to center for missing lower grids.
     Each pair of characters represents a longitude and latitude."
   (let* ((uc-grid (string-upcase mh-grid))
-	 (int-mapped (map 'list #'mh-char2num uc-grid)))
-    (loop for degrees in int-mapped
+	 (int-mapped (map 'list #'mh-char2num uc-grid))
+	 (long-center-offset 0)
+	 (lat-center-offset 0))
+    (loop 
+       for degrees in int-mapped
        for i from 0
        if (evenp i) 
-         collect degrees into longitudes
+         collect degrees into longitudes and
+	 do (setq long-center-offset (float (nth i LONG-LAT-OFFSETS)))
        else
-         collect degrees into latitudes
-       finally (return (list (- (apply #'+ (mapcar #'* longitudes LONG-FACTORS)) 180.0)
-			     (- (apply #'+ (mapcar #'* latitudes LAT-FACTORS)) 90.0))))))
+	 collect degrees into latitudes and
+	 do (setq lat-center-offset (float (nth i LONG-LAT-OFFSETS)))
+       finally (return (list (- (+ long-center-offset (apply #'+ (mapcar #'* longitudes LONG-FACTORS))) 180.0)
+			     (- (+ lat-center-offset (apply #'+ (mapcar #'* latitudes LAT-FACTORS))) 90.0))))))
+
 
 
