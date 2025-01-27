@@ -1,11 +1,13 @@
 
 (defun latitude2radians (latitute)
   "latitude is specified as a signed decimal in degrees, positive is north."
-  (* pi (/ (+ latitute 90.0) 180.0)))
+  ;;(* pi (/ (+ latitute 90.0) 180.0)))
+  (* pi (/ latitute 180.0)))
 
 (defun longitude2radians (longitude)
   "longitude is specified as a signed decimal in degrees, positive is east."
-  (* pi (/ (+ longitude 180.0) 180.0)))
+  ;;(* pi (/ (longitude 180.0) 180.0)))
+  (* pi (/ longitude 180.0)))
 
 (defun delta-lat (lat1 lat2)
   "Compute the difference between two latitudes in positive radians"
@@ -37,9 +39,9 @@
   "Compute the central angle in the Haversine formula"
   (* 2.0 (atan (sqrt a) (sqrt (- 1 a)))))
 
-(defun great-circle (lat1 long1 lat2 long2)
+(defun great-circle (lat-long1 lat-long2)
   "Compute the great circle distance in km between two latitude/longitude points in signed decimal degrees"
-  (* EARTH-RADIUS (haversine-c (haversine-a lat1 long1 lat2 long2))))
+  (* EARTH-RADIUS (haversine-c (haversine-a (car lat-long1) (cadr lat-long1) (car lat-long2) (cadr lat-long2)))))
 
 (defun mh-char2num (char)
   "takes a single character from a maidenhead grid and converts it to a 0 based integer"
@@ -53,9 +55,11 @@
 ;; alternating longitude and latitude factors
 (defvar LONG-LAT-OFFSETS '(10 5 1 1/2 1/24 1/48 1/240 1/480))
 
+;; note that https://hamnut.com/geocode/locator
+;; has a 1 second gap in longitudes between boxes which I believe is incorrect since it create a gap 
 (defun mh2ll (mh-grid)
   "Handle 2/4/6/8 charcters, default to center for missing lower grids.
-    Each pair of characters represents a longitude and latitude."
+    Each pair of characters represents a longitude and latitude. Returns (lat long)."
   (let* ((uc-grid (string-upcase mh-grid))
 	 (int-mapped (map 'list #'mh-char2num uc-grid))
 	 (long-center-offset 0)
@@ -69,8 +73,9 @@
        else
 	 collect degrees into latitudes and
 	 do (setq lat-center-offset (float (nth i LONG-LAT-OFFSETS)))
-       finally (return (list (- (+ long-center-offset (apply #'+ (mapcar #'* longitudes LONG-FACTORS))) 180.0)
-			     (- (+ lat-center-offset (apply #'+ (mapcar #'* latitudes LAT-FACTORS))) 90.0))))))
+       finally (return (list (- (+ lat-center-offset (apply #'+ (mapcar #'* latitudes LAT-FACTORS))) 90.0)
+			     (- (+ long-center-offset (apply #'+ (mapcar #'* longitudes LONG-FACTORS))) 180.0))))))
 
-
-
+(defun grid-great-circle (grid1 grid2)
+  "Return the great circle distabce in kilometers between two Maidenhead grid locations."
+  (great-circle (mh2ll grid1) (mh2ll grid2)))
