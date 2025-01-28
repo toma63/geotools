@@ -1,3 +1,4 @@
+(ql:quickload '(:dexador :cl-json))
 
 (defun latitude2radians (latitute)
   "latitude is specified as a signed decimal in degrees, positive is north."
@@ -79,3 +80,19 @@
 (defun grid-great-circle (grid1 grid2)
   "Return the great circle distabce in kilometers between two Maidenhead grid locations."
   (great-circle (mh2ll grid1) (mh2ll grid2)))
+
+(defun get-callsign-data (callsign)
+  "look up callsign data using the callook API."
+  (let* ((url (concatenate 'string "https://callook.info/" callsign "/json"))
+	 (response-body (dex:get url))
+	 (parsed-json (cl-json:decode-json-from-string response-body)))
+    parsed-json))
+
+(defun  get-grid-square (callsign)
+  "given parsed callsign data from callook.info, get grid square"
+  (cdr (assoc :gridsquare (cdr (assoc :location (get-callsign-data callsign))))))
+
+(defun callsign-distance (callsign1 callsign2)
+  "given two callsigns, compute the distance between their reported gridsquares"
+  (grid-great-circle (get-grid-square callsign1) (get-grid-square callsign2)))
+
