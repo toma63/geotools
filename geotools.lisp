@@ -96,3 +96,16 @@
   "given two callsigns, compute the distance between their reported gridsquares"
   (grid-great-circle (get-grid-square callsign1) (get-grid-square callsign2)))
 
+(defun dms2decimal (degrees minutes seconds)
+  "Converts degrees/minutes/seconds to a decimal number"
+  (let ((combiner #'+))
+    (if (< degrees 0) (setq combiner #'-))
+    (funcall combiner degrees (/ minutes 60.0) (/ seconds 3600.0))))
+
+(defmacro distance (loc1 loc2)
+  "compute the great circle distance between two locations, accepting callsign, grid, lat/long in decimal or dms"
+  `(macrolet ((c (callsign) `(g (get-grid-square ,callsign)))
+              (g (grid) `(mh2ll ,grid))
+              (ll (lat long) `(list ,lat ,long))
+              (dms (degrees minutes seconds) `(dms2decimal ,degrees ,minutes ,seconds)))
+     (great-circle ,loc1 ,loc2)))
