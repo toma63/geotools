@@ -86,7 +86,9 @@
   (let* ((url (concatenate 'string "https://callook.info/" callsign "/json"))
 	 (response-body (dex:get url))
 	 (parsed-json (cl-json:decode-json-from-string response-body)))
-    parsed-json))
+    (if (equal "INVALID" (cdr (assoc :STATUS parsed-json)))
+        (error "callsign lookup failed")
+        parsed-json)))
 
 (defun  get-grid-square (callsign)
   "given parsed callsign data from callook.info, get grid square"
