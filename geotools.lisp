@@ -42,7 +42,8 @@
 
 (defun great-circle (lat-long1 lat-long2)
   "Compute the great circle distance in km between two latitude/longitude points in signed decimal degrees"
-  (* EARTH-RADIUS (haversine-c (haversine-a (car lat-long1) (cadr lat-long1) (car lat-long2) (cadr lat-long2)))))
+  (* EARTH-RADIUS
+     (haversine-c (haversine-a (car lat-long1) (cadr lat-long1) (car lat-long2) (cadr lat-long2)))))
 
 (defun mh-char2num (char)
   "takes a single character from a maidenhead grid and converts it to a 0 based integer"
@@ -110,4 +111,4 @@
               (g (grid) `(mh2ll ,grid))
               (ll (lat long) `(list ,lat ,long))
               (dms (degrees minutes seconds) `(dms2decimal ,degrees ,minutes ,seconds)))
-     (great-circle ,loc1 ,loc2)))
+     (format nil "~5,2Fkm" (great-circle ,loc1 ,loc2))))
